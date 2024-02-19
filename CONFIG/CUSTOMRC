@@ -1,0 +1,11 @@
+#!/bin/bash
+
+alias git1="git clone --depth 1"
+alias ping8="ping 8.8.8.8"
+alias bye="sudo poweroff"
+
+if [[ "$TTY" == "/dev/tty1" ]]
+then
+        Hyprland
+fi
+echo "WELCOME 😎😈"

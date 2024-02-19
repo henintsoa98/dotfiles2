@@ -1,0 +1,63 @@
+#!/bin/bash
+set -e
+_RB=0
+_WB=0
+
+while true
+do
+	sleep 1
+	DISK=$(lsblk |grep "^[a-zA-Z]" |grep -v "loop\|NAME\|ram" |awk '{print $1}'|tr "\n" "\\|" |sed "s/|/ \\\| /g")
+#																  id  name  RC   WC   RB    WB
+	DATA=$(cat /proc/diskstats |awk '{print $6" "$10" "$3" "}' |grep "$DISK " | awk '{RB=RB+$1} {WB=WB+$2} END {print RB" "WB}') #|read RC WC RB WB
+
+	RB=$(echo $DATA | awk '{print $1}')
+	WB=$(echo $DATA | awk '{print $2}')
+
+	UNITR="b"
+	UNITW="b"
+	DRB=$(((RB-_RB)*512))
+	DWB=$(((WB-_WB)*512))
+	_RB="$RB"
+	_WB="$WB"
+	if [ $DWB -gt 1024 ]
+	then
+		DWB=$((DWB/1024))
+		UNITW="kib"
+		if [ $DWB -gt 1024 ]
+		then
+			DWB=$((DWB/1024))
+			UNITW="mib"
+			if [ $DWB -gt 1024 ]
+			then
+				DWB=$((DWB/1024))
+				UNITW="gib"
+				if [ $DWB -gt 1024 ]
+				then
+					DWB=$((DWB/1024))
+					UNITW="tib"
+				fi
+			fi
+		fi
+	fi
+	if [ $DRB -gt 1024 ]
+	then
+		DRB=$((DRB/1024))
+		UNITR="kib"
+		if [ $DRB -gt 1024 ]
+		then
+			DRB=$((DRB/1024))
+			UNITR="mib"
+			if [ $DRB -gt 1024 ]
+			then
+				DRB=$((DRB/1024))
+				UNITW="gib"
+				if [ $DRB -gt 1024 ]
+				then
+					DRB=$((DRB/1024))
+					UNITR="tib"
+				fi
+			fi
+		fi
+	fi
+	echo " $DRB${UNITR}/s  $DWB${UNITW}/s "
+done
